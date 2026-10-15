@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="banner.png" alt="TypeSprint" width="120" />
+  <img src="favicon.png" alt="TypeSprint" width="120" />
   <h1>TYPESPRINT<code>.exe</code></h1>
   <p><em>how fast do you type?</em></p>
   <p>
