@@ -1,35 +1,48 @@
-# ⌨ TYPESPRINT.exe
+<div align="center">
+  <img src="banner.png" alt="TypeSprint" width="120" />
+  <h1>TYPESPRINT<code>.exe</code></h1>
+  <p><em>how fast do you type?</em></p>
+  <p>
+    <img src="https://img.shields.io/badge/vanilla-JS-c8ff00?style=flat-square&labelColor=0e0e0e" />
+    <img src="https://img.shields.io/badge/zero-dependencies-c8ff00?style=flat-square&labelColor=0e0e0e" />
+    <img src="https://img.shields.io/badge/one-file-c8ff00?style=flat-square&labelColor=0e0e0e" />
+  </p>
+</div>
 
-> *how fast do you type?*
+---
 
-A minimal, zero-dependency speed typing test built on the **alvakry-theme** — dark/light, bilingual, and hiding a secret you'll have to find yourself.
+## what is this
+
+A minimal, zero-dependency speed typing test.
+No framework. No npm. No build step.
+Just open `index.html` and type.
+
+Built on **[alvakry-theme](../alvakry-theme)** — dark/light, bilingual EN/ID,
+and hiding a secret you'll have to find yourself.
 
 ---
 
 ## features
 
-```
-⏱  timed modes       15s / 30s / 60s / 120s
-📊  live stats        WPM · accuracy · errors · time left
-🌐  bilingual         English & Bahasa Indonesia word pools
-🎨  dark / light      auto-detects system preference
-🔊  click sounds      Web Audio API — crisp ticks, dull errors
-📈  run history       last 20 sessions saved in localStorage
-🔒  no backspace      once you move to the next word, you commit
-🤫  secret mode       ...try Alt+P
-```
+| | |
+|---|---|
+| ⏱ **timed modes** | 15s · 30s · 60s · 120s |
+| 📊 **live stats** | WPM · accuracy · errors · time left |
+| 🌐 **bilingual** | English & Bahasa Indonesia word pools |
+| 🎨 **dark / light** | auto-detects system preference, persisted |
+| 🔊 **click sounds** | Web Audio API — crisp tick on correct, dull on error |
+| 📈 **run history** | last 20 sessions saved locally |
+| 🔒 **no going back** | once you space to the next word, you commit |
+| 🤫 **secret mode** | `Alt+P` — you'll figure out the rest |
 
 ---
 
 ## usage
 
-No build step. No dependencies. No npm install.
-
-```
+```sh
+# no install required
 open index.html
 ```
-
-That's it.
 
 ---
 
@@ -37,66 +50,58 @@ That's it.
 
 | key | action |
 |-----|--------|
-| `Tab` / `Esc` | restart current test |
-| `Space` | advance to next word |
-| `Alt+P` | open secret code input |
+| `Space` | confirm word, advance |
+| `Backspace` | delete within current word only |
+| `Tab` / `Esc` | restart test |
+| `Alt+P` | open secret code prompt |
 
 ---
 
-## how WPM is calculated
-
-Standard formula — every 5 characters = 1 word.
+## scoring
 
 ```
-WPM     = (correct_chars / 5) / elapsed_minutes
-Raw WPM = (all_chars_typed / 5) / elapsed_minutes
-Accuracy = (correct_chars / total_chars) × 100
+WPM      = (correct_chars ÷ 5) ÷ elapsed_minutes
+Raw WPM  = (all_chars_typed ÷ 5) ÷ elapsed_minutes
+Accuracy = (correct_chars ÷ total_chars) × 100
 ```
 
-Backspacing to a previous word is **not allowed** once confirmed with space — by design.
+Every 5 characters = 1 word. Industry standard formula.
 
 ---
 
 ## secret mode
 
-Press `Alt+P` anywhere on the page. A code input will appear.
-
-Enter the right code to unlock an alternate word pool.
+Press `Alt+P`. Enter the code. 
 
 The words will mean something.
+
+*(no spoilers here)*
 
 ---
 
 ## stack
 
 ```
-HTML · CSS · Vanilla JS
-Web Audio API      (click sounds)
-localStorage       (theme, language, run history)
-IntersectionObserver  (scroll fade)
-requestAnimationFrame  (custom cursor)
+HTML  CSS  Vanilla JS
+─────────────────────────────────
+Web Audio API        click sounds
+localStorage         settings + history
+requestAnimationFrame  custom cursor
+IntersectionObserver   scroll fade-in
 ```
-
-Zero frameworks. Zero libraries. One file.
 
 ---
 
-## theme
-
-Built on [alvakry-theme](../alvakry-theme) —
-a personal design system using **Space Grotesk** + **Space Mono**
-with a neon lime accent (`#c8ff00`).
-
-Design tokens:
+## design tokens
 
 ```css
---bg        page background
---fg        primary text
---muted     secondary / labels
---border    subtle dividers
---accent    #c8ff00  (the lime)
+--bg        #f8f7f5 / #0e0e0e
+--fg        #0d0d0d / #f0ede8
+--accent    #c8ff00   /* neon lime */
 --correct   #22c55e
 --wrong     #ef4444
+--sans      Space Grotesk
+--mono      Space Mono
 ```
 
 ---
@@ -105,12 +110,16 @@ Design tokens:
 
 ```
 speed typing website/
-└── index.html    ← everything. one file.
-└── README.md     ← you are here
+├── index.html   ← the whole app. one file.
+├── banner.png   ← icon (replace with your own)
+└── README.md    ← you are here
 ```
+
+> To replace the favicon: add your `favicon.png` to the folder.
+> The `<link>` tag in `index.html` already points to it.
 
 ---
 
 <div align="center">
-  <sub>built with alvakry-theme · no frameworks were harmed</sub>
+  <sub>built with alvakry-theme · no frameworks were harmed in the making of this project</sub>
 </div>
