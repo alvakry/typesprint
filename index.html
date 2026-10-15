@@ -1,0 +1,1575 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light" data-lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TypeSprint — Speed Typing Test</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;700&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── Reset ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ══════════════════ DESIGN TOKENS ══════════════════ */
+    [data-theme="light"] {
+      --bg:        #f8f7f5;
+      --bg-nav:    rgba(248,247,245,0.88);
+      --fg:        #0d0d0d;
+      --muted:     #888;
+      --border:    rgba(0,0,0,0.09);
+      --accent:    #c8ff00;
+      --body-text: #444;
+      --correct:   #22c55e;
+      --wrong:     #ef4444;
+      --wrong-bg:  rgba(239,68,68,0.12);
+      --cursor-char: #c8ff00;
+      --box-bg:    rgba(0,0,0,0.03);
+      --box-hover: rgba(0,0,0,0.06);
+    }
+    [data-theme="dark"] {
+      --bg:        #0e0e0e;
+      --bg-nav:    rgba(14,14,14,0.88);
+      --fg:        #f0ede8;
+      --muted:     #555;
+      --border:    rgba(255,255,255,0.09);
+      --accent:    #c8ff00;
+      --body-text: #aaa;
+      --correct:   #22c55e;
+      --wrong:     #ef4444;
+      --wrong-bg:  rgba(239,68,68,0.14);
+      --cursor-char: #c8ff00;
+      --box-bg:    rgba(255,255,255,0.03);
+      --box-hover: rgba(255,255,255,0.06);
+    }
+    :root {
+      --max: 780px;
+      --sans: 'Space Grotesk', sans-serif;
+      --mono: 'Space Mono', monospace;
+      --transition: 0.2s ease;
+      --transition-theme: background 0.3s, color 0.3s;
+    }
+
+    /* ══════════════════ BASE ══════════════════ */
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--fg);
+      font-family: var(--sans);
+      line-height: 1.65;
+      padding: 0 1.5rem;
+      transition: var(--transition-theme);
+      cursor: none;
+      min-height: 100vh;
+    }
+
+    /* ── Cursor ── */
+    .cursor {
+      width: 10px; height: 10px;
+      background: var(--fg);
+      border-radius: 50%;
+      position: fixed;
+      top: 0; left: 0;
+      pointer-events: none;
+      z-index: 9999;
+      will-change: transform;
+      transform: translateZ(0);
+      contain: layout style;
+      transition: width 0.12s ease, height 0.12s ease, background 0.12s ease;
+    }
+    .cursor.grow {
+      width: 28px; height: 28px;
+      background: var(--accent);
+      margin-top: -9px; margin-left: -9px;
+    }
+
+    /* ── Noise ── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.5;
+      will-change: auto;
+      transform: translateZ(0);
+    }
+
+    /* ══════════════════ LAYOUT ══════════════════ */
+    .container { max-width: var(--max); margin: 0 auto; }
+
+    /* ══════════════════ NAV ══════════════════ */
+    .nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.6rem 1.5rem;
+      position: sticky; top: 0;
+      background: var(--bg-nav);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      margin: 0 -1.5rem;
+      gap: 1rem;
+      transition: background 0.3s;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-logo {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      color: var(--fg);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-logo .dim { color: var(--muted); font-style: italic; }
+    .nav-logo .accent { color: var(--accent); }
+    .nav-controls { display: flex; align-items: center; gap: 0.45rem; flex-shrink: 0; }
+    .pill-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      padding: 0.26rem 0.7rem;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      transition: color var(--transition), border-color var(--transition);
+    }
+    .pill-btn:hover { color: var(--fg); border-color: var(--fg); }
+    .pill-group {
+      display: flex;
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+    .pill-group button {
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      letter-spacing: 0.06em;
+      color: var(--muted);
+      padding: 0.26rem 0.65rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .pill-group button.active { background: var(--fg); color: var(--bg); }
+
+    /* ══════════════════ HERO ══════════════════ */
+    .hero {
+      padding: 3.5rem 0 2rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero-tag {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .hero-tag::before {
+      content: '';
+      display: inline-block;
+      width: 28px; height: 1px;
+      background: var(--muted);
+    }
+    .display {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+      margin-bottom: 0.75rem;
+    }
+    .display .accent { color: var(--accent); }
+    .subtitle {
+      font-size: 0.93rem;
+      color: var(--muted);
+      max-width: 480px;
+      line-height: 1.75;
+    }
+
+    /* ══════════════════ STATS BAR ══════════════════ */
+    .stats-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      margin: 2.5rem 0 0;
+    }
+    .stat-cell {
+      background: var(--bg);
+      padding: 1rem 1.2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+      transition: background 0.3s;
+    }
+    .stat-cell:hover { background: var(--box-hover); }
+    .stat-label {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .stat-value {
+      font-family: var(--mono);
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--fg);
+      letter-spacing: -0.02em;
+      line-height: 1;
+    }
+    .stat-value.highlight { color: var(--accent); }
+    .stat-unit {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+
+    /* ══════════════════ TYPING SECTION ══════════════════ */
+    .typing-section { padding: 2.5rem 0; border-bottom: 1px solid var(--border); }
+
+    /* Timer mode selector */
+    .mode-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .mode-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-right: 0.5rem;
+    }
+    .mode-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.28rem 0.75rem;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      transition: all 0.15s;
+    }
+    .mode-btn:hover { color: var(--fg); border-color: var(--fg); }
+    .mode-btn.active { background: var(--fg); color: var(--bg); border-color: var(--fg); }
+
+    .mode-divider {
+      width: 1px;
+      height: 1.4rem;
+      background: var(--border);
+      margin: 0 0.25rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Typing box ── */
+    .typing-box {
+      position: relative;
+      background: var(--box-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 1.25rem;
+      cursor: text;
+      transition: border-color 0.2s;
+      overflow: hidden;
+    }
+    .typing-box:focus-within { border-color: rgba(200,255,0,0.4); }
+    .typing-box.blurred .words {
+      filter: blur(4px);
+      opacity: 0.35;
+      transition: filter 0.2s, opacity 0.2s;
+      pointer-events: none;
+    }
+    .typing-box .words {
+      transition: filter 0.2s, opacity 0.2s;
+    }
+    .typing-box.blurred::after {
+      content: attr(data-blur-msg);
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--fg);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .words {
+      font-family: var(--mono);
+      font-size: 1.1rem;
+      line-height: 2;
+      letter-spacing: 0.01em;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    /* Character states */
+    .char { position: relative; }
+    .char.correct { color: var(--correct); }
+    .char.wrong   { color: var(--wrong); background: var(--wrong-bg); border-radius: 1px; }
+    .char.pending { color: var(--muted); }
+    /* Caret */
+    .char.caret::before {
+      content: '';
+      position: absolute;
+      left: -1px; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--cursor-char);
+      border-radius: 1px;
+      animation: blink 1s step-end infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* Hidden real input */
+    #hiddenInput {
+      position: absolute;
+      opacity: 0;
+      width: 1px; height: 1px;
+      pointer-events: none;
+    }
+
+    /* Restart hint */
+    .restart-hint {
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .restart-hint kbd {
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 0.1rem 0.4rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      color: var(--muted);
+      background: var(--box-bg);
+    }
+
+    /* ══════════════════ RESULTS OVERLAY ══════════════════ */
+    .result-overlay {
+      display: none;
+      flex-direction: column;
+      gap: 2rem;
+      padding: 2.5rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .result-overlay.visible { display: flex; }
+
+    .result-label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .result-label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .result-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .result-cell {
+      background: var(--bg);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .result-cell .lbl {
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .result-cell .val {
+      font-family: var(--mono);
+      font-size: 2.4rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      line-height: 1;
+      color: var(--fg);
+    }
+    .result-cell .val.accent { color: var(--accent); }
+    .result-cell .unit {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+    }
+
+    .result-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+    .btn-primary {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      color: var(--bg);
+      background: var(--accent);
+      text-decoration: none;
+      border: 1px solid var(--accent);
+      padding: 0.6rem 1.4rem;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: opacity 0.15s;
+      color: #0d0d0d;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-outline {
+      font-family: var(--mono);
+      font-size: 0.78rem;
+      letter-spacing: 0.05em;
+      color: var(--fg);
+      background: transparent;
+      text-decoration: none;
+      border: 1px solid var(--fg);
+      padding: 0.6rem 1.4rem;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-outline:hover { background: var(--fg); color: var(--bg); }
+
+    /* ══════════════════ HISTORY ══════════════════ */
+    .history-section { padding: 2.5rem 0; }
+
+    .label {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .label::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    .history-empty {
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      padding: 1.5rem 0;
+    }
+
+    .history-list { display: flex; flex-direction: column; }
+    .history-row {
+      display: grid;
+      grid-template-columns: auto 1fr repeat(3, auto);
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      font-size: 0.72rem;
+    }
+    .history-row:last-child { border-bottom: none; }
+    .history-index { color: var(--muted); width: 1.5rem; text-align: right; }
+    .history-wpm { font-size: 0.9rem; font-weight: 700; }
+    .history-wpm.best { color: var(--accent); }
+    .history-acc { color: var(--muted); }
+    .history-mode { color: var(--muted); }
+    .history-date { color: var(--muted); text-align: right; }
+    .history-label { font-size: 0.6rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+    /* ══════════════════ FOOTER ══════════════════ */
+    .footer {
+      padding: 2rem 0 3rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      border-top: 1px solid var(--border);
+    }
+
+    /* i18n */
+    /* i18n */
+    [data-lang="en"] [lang="id"] { display: none; }
+    [data-lang="id"] [lang="en"] { display: none; }
+    .code-modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+    }
+    .code-modal-backdrop.open { display: flex; }
+
+    .code-modal {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2rem;
+      width: min(420px, 90vw);
+      display: flex;
+      flex-direction: column;
+      gap: 1.2rem;
+      position: relative;
+    }
+    .code-modal-label {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .code-modal-label span { color: var(--accent); }
+    .code-modal-input {
+      width: 100%;
+      background: var(--box-bg);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 0.65rem 0.9rem;
+      font-family: var(--mono);
+      font-size: 1rem;
+      color: var(--fg);
+      letter-spacing: 0.08em;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .code-modal-input:focus { border-color: var(--accent); }
+    .code-modal-input.error { border-color: var(--wrong); animation: shake 0.3s ease; }
+    .code-modal-hint {
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      letter-spacing: 0.06em;
+    }
+    .code-modal-hint.err { color: var(--wrong); }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25%      { transform: translateX(-6px); }
+      75%      { transform: translateX(6px); }
+    }
+
+    /* special mode banner */
+    .special-banner {
+      display: none;
+      align-items: center;
+      gap: 0.6rem;
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 1rem;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      background: var(--box-bg);
+    }
+    .special-banner.visible { display: flex; }
+    .special-banner .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+    .special-banner .exit-btn {
+      margin-left: auto;
+      background: none;
+      border: none;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      color: var(--muted);
+      cursor: pointer;
+      letter-spacing: 0.06em;
+      text-decoration: underline;
+      padding: 0;
+    }
+    .special-banner .exit-btn:hover { color: var(--fg); }
+    /* ══════════════════ RESPONSIVE ══════════════════ */
+    @media (max-width: 600px) {
+      body { cursor: auto; padding: 0 1rem; }
+      .cursor { display: none; }
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .result-grid { grid-template-columns: repeat(2, 1fr); }
+      .words { font-size: 0.95rem; }
+      .history-row {
+        grid-template-columns: auto 1fr auto;
+      }
+      .history-mode, .history-date { display: none; }
+      .nav { margin: 0 -1rem; padding-left: 1rem; padding-right: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Custom cursor ── -->
+<div class="cursor" id="cursor"></div>
+
+<!-- ══════════════════ NAV ══════════════════ -->
+<div class="container">
+  <nav class="nav">
+    <a class="nav-logo" href="/">TYPE<span class="accent">SPRINT</span><span class="dim">.exe</span></a>
+    <div class="nav-controls">
+      <button class="pill-btn" id="themeBtn" aria-label="Toggle theme">
+        <span id="themeIcon">☾</span>
+        <span id="themeLabel">dark</span>
+      </button>
+    </div>
+  </nav>
+</div>
+
+<div class="container">
+
+  <!-- ══════════════════ HERO ══════════════════ -->
+  <section class="hero">
+    <div class="hero-tag">
+      <span lang="en">v1.0 — speed typing test</span>
+      <span lang="id">v1.0 — tes kecepatan mengetik</span>
+    </div>
+    <h1 class="display">
+      <span lang="en">How fast<br>do you <span class="accent">type?</span></span>
+      <span lang="id">Seberapa cepat<br>kamu <span class="accent">mengetik?</span></span>
+    </h1>
+    <p class="subtitle">
+      <span lang="en">Test your typing speed and accuracy. Pick a duration, start typing, and see your WPM.</span>
+      <span lang="id">Uji kecepatan dan akurasi mengetikmu. Pilih durasi, mulai mengetik, dan lihat WPM-mu.</span>
+    </p>
+
+    <!-- Live stats bar -->
+    <div class="stats-bar">
+      <div class="stat-cell">
+        <span class="stat-label" lang="en">WPM</span>
+        <span class="stat-label" lang="id">KPM*</span>
+        <span class="stat-value highlight" id="liveWpm">0</span>
+        <span class="stat-unit" lang="en">words/min</span>
+        <span class="stat-unit" lang="id">kata/menit</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label" lang="en">Accuracy</span>
+        <span class="stat-label" lang="id">Akurasi</span>
+        <span class="stat-value" id="liveAcc">—</span>
+        <span class="stat-unit">%</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label" lang="en">Time left</span>
+        <span class="stat-label" lang="id">Sisa waktu</span>
+        <span class="stat-value" id="liveTimer">60</span>
+        <span class="stat-unit" lang="en">seconds</span>
+        <span class="stat-unit" lang="id">detik</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-label" lang="en">Errors</span>
+        <span class="stat-label" lang="id">Kesalahan</span>
+        <span class="stat-value" id="liveErrors">0</span>
+        <span class="stat-unit" lang="en">chars</span>
+        <span class="stat-unit" lang="id">karakter</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ TYPING AREA ══════════════════ -->
+  <section class="typing-section" id="typingSection">
+
+    <!-- Special mode banner -->
+    <div class="special-banner" id="specialBanner">
+      <span class="dot"></span>
+      <span lang="en">special mode active</span>
+      <span lang="id">mode spesial aktif</span>
+      <button class="exit-btn" id="exitSpecialBtn">
+        <span lang="en">exit</span>
+        <span lang="id">keluar</span>
+      </button>
+    </div>
+
+    <!-- Duration + language selector -->
+    <div class="mode-row">
+      <span class="mode-label" lang="en">time</span>
+      <span class="mode-label" lang="id">waktu</span>
+      <button class="mode-btn" data-seconds="15">15s</button>
+      <button class="mode-btn" data-seconds="30">30s</button>
+      <button class="mode-btn active" data-seconds="60">60s</button>
+      <button class="mode-btn" data-seconds="120">120s</button>
+      <span class="mode-divider"></span>
+      <span class="mode-label" lang="en">language</span>
+      <span class="mode-label" lang="id">bahasa</span>
+      <button class="mode-btn word-lang-btn active" data-wordlang="en">EN</button>
+      <button class="mode-btn word-lang-btn" data-wordlang="id">ID</button>
+    </div>
+
+    <!-- Typing box -->
+    <div class="typing-box" id="typingBox" data-blur-msg="CLICK TO FOCUS">
+      <input id="hiddenInput" type="text" autocomplete="off" autocorrect="off"
+             autocapitalize="off" spellcheck="false" aria-label="Typing input">
+      <div class="words" id="wordsDisplay" aria-hidden="true"></div>
+    </div>
+
+    <!-- Hints -->
+    <div class="restart-hint">
+      <span lang="en"><kbd>Tab</kbd> or <kbd>Esc</kbd> → restart</span>
+      <span lang="id"><kbd>Tab</kbd> atau <kbd>Esc</kbd> → mulai ulang</span>
+      <span style="margin-left:auto; opacity:0.5;">
+        <span lang="en">click box to focus</span>
+        <span lang="id">klik kotak untuk fokus</span>
+      </span>
+    </div>
+      </span>
+    </div>
+
+  </section>
+
+  <!-- ══════════════════ RESULTS ══════════════════ -->
+  <section class="result-overlay" id="resultOverlay">
+    <div>
+      <p class="result-label" lang="en">results</p>
+      <p class="result-label" lang="id">hasil</p>
+      <div class="result-grid">
+        <div class="result-cell">
+          <span class="lbl">WPM</span>
+          <span class="val accent" id="resWpm">0</span>
+          <span class="unit" lang="en">words per min</span>
+          <span class="unit" lang="id">kata per menit</span>
+        </div>
+        <div class="result-cell">
+          <span class="lbl" lang="en">Accuracy</span>
+          <span class="lbl" lang="id">Akurasi</span>
+          <span class="val" id="resAcc">0</span>
+          <span class="unit">%</span>
+        </div>
+        <div class="result-cell">
+          <span class="lbl" lang="en">Errors</span>
+          <span class="lbl" lang="id">Kesalahan</span>
+          <span class="val" id="resErrors">0</span>
+          <span class="unit" lang="en">chars</span>
+          <span class="unit" lang="id">karakter</span>
+        </div>
+        <div class="result-cell">
+          <span class="lbl" lang="en">Raw WPM</span>
+          <span class="lbl" lang="id">WPM Mentah</span>
+          <span class="val" id="resRaw">0</span>
+          <span class="unit" lang="en">incl. errors</span>
+          <span class="unit" lang="id">termasuk salah</span>
+        </div>
+        <div class="result-cell">
+          <span class="lbl" lang="en">Duration</span>
+          <span class="lbl" lang="id">Durasi</span>
+          <span class="val" id="resDuration">60</span>
+          <span class="unit" lang="en">seconds</span>
+          <span class="unit" lang="id">detik</span>
+        </div>
+        <div class="result-cell">
+          <span class="lbl" lang="en">Chars</span>
+          <span class="lbl" lang="id">Karakter</span>
+          <span class="val" id="resChars">0</span>
+          <span class="unit" lang="en">typed</span>
+          <span class="unit" lang="id">diketik</span>
+        </div>
+      </div>
+    </div>
+    <div class="result-actions">
+      <button class="btn-primary" id="retryBtn">
+        <span lang="en">↺ Try again</span>
+        <span lang="id">↺ Coba lagi</span>
+      </button>
+      <button class="btn-outline" id="newTextBtn">
+        <span lang="en">New text</span>
+        <span lang="id">Teks baru</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ══════════════════ HISTORY ══════════════════ -->
+  <section class="history-section">
+    <p class="label">
+      <span lang="en">run history</span>
+      <span lang="id">riwayat sesi</span>
+    </p>
+    <div id="historyContainer">
+      <p class="history-empty" id="historyEmpty">
+        <span lang="en">No runs yet. Complete a test to see your history.</span>
+        <span lang="id">Belum ada sesi. Selesaikan tes untuk melihat riwayat.</span>
+      </p>
+      <div class="history-list" id="historyList"></div>
+    </div>
+  </section>
+
+  <!-- ══════════════════ FOOTER ══════════════════ -->
+  <footer class="footer">
+  <footer class="footer">
+    <span lang="en">© 2026 TypeSprint</span>
+    <span lang="id">© 2026 TypeSprint</span>
+    <span style="font-style:italic; opacity:0.6;">
+      <span lang="en">built with alvakry-theme</span>
+      <span lang="id">dibuat dengan alvakry-theme</span>
+    </span>
+  </footer>
+
+</div><!-- /container -->
+
+<!-- ══════════════════ SECRET CODE MODAL ══════════════════ -->
+<div class="code-modal-backdrop" id="codeModalBackdrop">
+  <div class="code-modal" id="codeModal">
+    <p class="code-modal-label">⌨ <span>secret mode</span> — enter code</p>
+    <input class="code-modal-input" id="codeInput" type="text"
+           autocomplete="off" autocorrect="off" autocapitalize="off"
+           spellcheck="false" placeholder="enter code..." maxlength="32">
+    <p class="code-modal-hint" id="codeHint">
+      <span lang="en">Press <kbd style="border:1px solid var(--border);padding:0.1rem 0.35rem;border-radius:3px;font-family:var(--mono);font-size:0.62rem;">Esc</kbd> to close</span>
+      <span lang="id">Tekan <kbd style="border:1px solid var(--border);padding:0.1rem 0.35rem;border-radius:3px;font-family:var(--mono);font-size:0.62rem;">Esc</kbd> untuk tutup</span>
+    </p>
+  </div>
+</div>
+
+<script>
+(function () {
+  /* ════════════════════════════════════════
+     WORD POOL
+     ════════════════════════════════════════ */
+  var wordPoolEN = [
+    "the","be","to","of","and","a","in","that","have","it","for","not","on","with",
+    "he","as","you","do","at","this","but","his","by","from","they","we","say","her",
+    "she","or","an","will","my","one","all","would","there","their","what","so","up",
+    "out","if","about","who","get","which","go","me","when","make","can","like","time",
+    "no","just","him","know","take","people","into","year","your","good","some","could",
+    "them","see","other","than","then","now","look","only","come","its","over","think",
+    "also","back","after","use","two","how","our","work","first","well","way","even",
+    "new","want","because","any","these","give","day","most","us","great","between",
+    "need","large","often","hand","high","place","hold","turn","right","might","came",
+    "show","form","air","land","here","light","voice","power","town","fine","drive",
+    "short","road","book","carry","science","eat","friend","began","idea","fish","move",
+    "world","below","family","simple","mind","behind","clear","song","always","those",
+    "both","white","children","begin","got","walk","example","ease","paper","group",
+    "always","music","those","both","mark","often","letter","until","mile","river",
+    "plant","close","keep","children","side","feet","car","mile","night","walk","white"
+  ];
+
+  var wordPoolID = [
+    "aku","kamu","dia","kita","mereka","dan","yang","ini","itu","ada","tidak","bisa",
+    "akan","sudah","sedang","dengan","untuk","dari","ke","di","pada","oleh","dalam",
+    "karena","jika","atau","juga","tapi","namun","saat","ketika","setelah","sebelum",
+    "sangat","lebih","paling","sangat","hanya","semua","banyak","sedikit","beberapa",
+    "mau","perlu","harus","boleh","dapat","sering","selalu","kadang","mungkin","pasti",
+    "rumah","sekolah","jalan","kota","negara","dunia","orang","anak","ibu","ayah",
+    "waktu","hari","bulan","tahun","jam","menit","detik","pagi","siang","malam","sore",
+    "kerja","belajar","makan","minum","tidur","pergi","datang","beli","jual","baca",
+    "tulis","lihat","dengar","pikir","rasa","tahu","cinta","suka","benci","takut",
+    "senang","sedih","marah","bahagia","kuat","lemah","besar","kecil","panjang","pendek",
+    "tinggi","rendah","cepat","lambat","baru","lama","baik","buruk","benar","salah",
+    "mudah","sulit","bagus","jelek","bersih","kotor","ramai","sepi","terang","gelap",
+    "air","api","tanah","udara","pohon","bunga","binatang","makanan","minuman","buku",
+    "meja","kursi","pintu","jendela","langit","bumi","laut","gunung","sungai","hutan"
+  ];
+
+  /* ════════════════════════════════════════
+     SECRET TEXT POOL  (kode: "fatpig")
+     ════════════════════════════════════════ */
+  var secretTexts = [
+    "korupsi merajalela di tubuh birokrasi negara ini tanpa henti",
+    "pejabat kaya rakyat sengsara itulah wajah Indonesia hari ini",
+    "anggaran negara habis untuk proyek fiktif yang tidak berguna",
+    "hukum hanya tajam ke bawah tapi tumpul ke atas",
+    "oligarki mengendalikan kebijakan negara demi kepentingan segelintir orang",
+    "kebebasan pers dibungkam satu per satu dengan berbagai cara",
+    "suara rakyat diabaikan demi kepentingan partai dan kroni",
+    "subsidi dicabut tapi gaji pejabat terus naik setiap tahun",
+    "demokrasi tinggal nama ketika pemilu bisa dibeli dengan uang",
+    "aparat negara digunakan untuk membungkam kritik dan oposisi",
+    "utang negara menumpuk tapi kesejahteraan rakyat tidak membaik",
+    "reformasi gagal karena para pelakunya justru menjadi penguasa",
+    "transparansi hanya slogan kosong di mulut para pejabat korup",
+    "rakyat miskin semakin terhimpit sementara elite semakin kaya",
+    "investasi asing mengeksploitasi sumber daya tanpa manfaat bagi rakyat",
+    "penegakan hukum lemah ketika menyangkut nama besar dan koneksi",
+    "pendidikan terbengkalai karena anggaran terus dipotong untuk proyek prestisius",
+    "lingkungan dikorbankan demi izin tambang yang menguntungkan pengusaha dekat istana",
+    "narasi nasionalisme digunakan untuk menutup mata atas ketidakadilan nyata",
+    "nepotisme tumbuh subur di setiap lini pemerintahan pusat dan daerah"
+  ];
+
+  /* ════════════════════════════════════════
+     STATE
+     ════════════════════════════════════════ */
+  var state_specialMode = false; /* declared early so generateWords can read it */
+
+  var state = {
+    words:        [],
+    typedWords:   [],
+    currentWord:  0,
+    currentChar:  0,
+    typed:        '',       /* current word input */
+    started:      false,
+    finished:     false,
+    timer:        null,
+    timeLeft:     60,
+    totalSeconds: 60,
+    totalCorrect: 0,
+    totalWrong:   0,
+    rawChars:     0,
+    lang:         'en'
+  };
+
+  var history = JSON.parse(localStorage.getItem('typesprint_history') || '[]');
+
+  /* ════════════════════════════════════════
+     DOM REFS
+     ════════════════════════════════════════ */
+  var $words    = document.getElementById('wordsDisplay');
+  var $input    = document.getElementById('hiddenInput');
+  var $box      = document.getElementById('typingBox');
+  var $overlay  = document.getElementById('resultOverlay');
+  var $typeSec  = document.getElementById('typingSection');
+
+  var $liveWpm    = document.getElementById('liveWpm');
+  var $liveAcc    = document.getElementById('liveAcc');
+  var $liveTimer  = document.getElementById('liveTimer');
+  var $liveErrors = document.getElementById('liveErrors');
+
+  var $resWpm      = document.getElementById('resWpm');
+  var $resAcc      = document.getElementById('resAcc');
+  var $resErrors   = document.getElementById('resErrors');
+  var $resRaw      = document.getElementById('resRaw');
+  var $resDuration = document.getElementById('resDuration');
+  var $resChars    = document.getElementById('resChars');
+
+  var $retryBtn    = document.getElementById('retryBtn');
+  var $newTextBtn  = document.getElementById('newTextBtn');
+  var $historyList = document.getElementById('historyList');
+  var $historyEmpty= document.getElementById('historyEmpty');
+
+  /* ════════════════════════════════════════
+     GENERATE TEXT
+     ════════════════════════════════════════ */
+  function randomWords(pool, n) {
+    var arr = [];
+    for (var i = 0; i < n; i++) {
+      arr.push(pool[Math.floor(Math.random() * pool.length)]);
+    }
+    return arr;
+  }
+
+  function generateWords() {
+    var pool;
+    if (state_specialMode) {
+      /* bangun pool dari kalimat-kalimat rahasia */
+      var words = [];
+      while (words.length < 120) {
+        var s = secretTexts[Math.floor(Math.random() * secretTexts.length)];
+        words = words.concat(s.split(' '));
+      }
+      state.words = words;
+    } else {
+      pool = (state.lang === 'id') ? wordPoolID : wordPoolEN;
+      state.words = randomWords(pool, 120);
+    }
+    state.typedWords = [];
+    state.currentWord = 0;
+    state.currentChar = 0;
+    state.typed = '';
+    state.totalCorrect = 0;
+    state.totalWrong = 0;
+    state.rawChars = 0;
+    renderWords();
+  }
+
+  /* ════════════════════════════════════════
+     RENDER WORDS
+     ════════════════════════════════════════ */
+  function renderWords() {
+    var html = '';
+    for (var w = 0; w < state.words.length; w++) {
+      var word = state.words[w];
+      var typedWord = state.typedWords[w] || '';
+
+      html += '<span class="word" data-index="' + w + '">';
+
+      for (var c = 0; c < word.length; c++) {
+        var cls = 'char pending';
+        if (w < state.currentWord) {
+          /* past word */
+          if (c < typedWord.length) {
+            cls = 'char ' + (typedWord[c] === word[c] ? 'correct' : 'wrong');
+          } else {
+            cls = 'char wrong'; /* missed char */
+          }
+        } else if (w === state.currentWord) {
+          /* current word */
+          if (c < state.typed.length) {
+            cls = 'char ' + (state.typed[c] === word[c] ? 'correct' : 'wrong');
+          } else if (c === state.typed.length) {
+            cls = 'char pending caret';
+          } else {
+            cls = 'char pending';
+          }
+        }
+        html += '<span class="' + cls + '">' + escHtml(word[c]) + '</span>';
+      }
+
+      /* extra typed chars beyond word length */
+      if (w === state.currentWord && state.typed.length > word.length) {
+        for (var e = word.length; e < state.typed.length; e++) {
+          var isLast = (e === state.typed.length - 1);
+          html += '<span class="char wrong' + (isLast ? ' caret' : '') + '">' + escHtml(state.typed[e]) + '</span>';
+        }
+      }
+
+      /* caret at start of current word (nothing typed yet) */
+      if (w === state.currentWord && state.typed.length === 0 && word.length > 0) {
+        /* already added caret on first char above */
+      }
+
+      html += '</span> ';
+    }
+    $words.innerHTML = html;
+    scrollToCurrent();
+  }
+
+  function scrollToCurrent() {
+    var curWordEl = $words.querySelector('.word[data-index="' + state.currentWord + '"]');
+    if (!curWordEl) return;
+    var boxTop   = $box.getBoundingClientRect().top;
+    var wordTop  = curWordEl.getBoundingClientRect().top;
+    var offset   = wordTop - boxTop;
+    if (offset > $box.clientHeight * 0.55) {
+      $box.scrollTop += offset - $box.clientHeight * 0.3;
+    }
+  }
+
+  function escHtml(c) {
+    if (c === '<') return '&lt;';
+    if (c === '>') return '&gt;';
+    if (c === '&') return '&amp;';
+    return c;
+  }
+
+  /* ════════════════════════════════════════
+     TYPING LOGIC
+     ════════════════════════════════════════ */
+  $input.addEventListener('input', function (e) {
+    if (state.finished) return;
+
+    var val = $input.value;
+
+    /* space → move to next word */
+    if (val.endsWith(' ')) {
+      var typed = val.trim();
+      if (typed.length === 0) { $input.value = ''; return; }
+
+      /* score the word */
+      var word = state.words[state.currentWord] || '';
+      var correct = 0, wrong = 0;
+      var maxLen = Math.max(typed.length, word.length);
+      for (var i = 0; i < maxLen; i++) {
+        if (i < typed.length && i < word.length) {
+          if (typed[i] === word[i]) correct++; else wrong++;
+        } else {
+          wrong++;
+        }
+      }
+      state.totalCorrect += correct;
+      state.totalWrong   += wrong;
+      state.rawChars     += typed.length + 1; /* +1 for space */
+
+      state.typedWords[state.currentWord] = typed;
+      state.currentWord++;
+      state.typed = '';
+      $input.value = '';
+
+      /* extend words pool if needed */
+      if (state.currentWord >= state.words.length - 10) {
+        if (state_specialMode) {
+          /* extend dengan kata-kata dari kalimat rahasia */
+          var extraSecret = [];
+          while (extraSecret.length < 40) {
+            var s = secretTexts[Math.floor(Math.random() * secretTexts.length)];
+            extraSecret = extraSecret.concat(s.split(' '));
+          }
+          state.words = state.words.concat(extraSecret);
+        } else {
+          var pool = (state.lang === 'id') ? wordPoolID : wordPoolEN;
+          var extra = randomWords(pool, 40);
+          state.words = state.words.concat(extra);
+        }
+      }
+
+      playClick(false); /* space advance — clean click */
+      if (!state.started) startTimer();
+      updateLiveStats();
+      renderWords();
+      return;
+    }
+
+    /* determine if the new character is correct or wrong for sound feedback */
+    var newLen = val.length;
+    if (newLen > state.typed.length) {
+      /* a character was added */
+      var charIdx = newLen - 1;
+      var currentWord = state.words[state.currentWord] || '';
+      var isWrong = (charIdx >= currentWord.length) || (val[charIdx] !== currentWord[charIdx]);
+      playClick(isWrong);
+    }
+    /* backspace (deletion) — no sound */
+
+    state.typed = val;
+    if (!state.started && val.length > 0) startTimer();
+    updateLiveStats();
+    renderWords();
+  });
+
+  /* ════════════════════════════════════════
+     CLICK SOUND  (Web Audio API — no file needed)
+     ════════════════════════════════════════ */
+  var audioCtx = null;
+  function getAudioCtx() {
+    if (!audioCtx) {
+      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    return audioCtx;
+  }
+
+  function playClick(isError) {
+    try {
+      var ctx  = getAudioCtx();
+      var osc  = ctx.createOscillator();
+      var gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      /* error key → lower, duller tone; normal → crisp tick */
+      osc.type      = 'square';
+      osc.frequency.setValueAtTime(isError ? 180 : 820, ctx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(isError ? 80 : 420, ctx.currentTime + 0.04);
+
+      gain.gain.setValueAtTime(isError ? 0.06 : 0.04, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.045);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.05);
+    } catch (err) { /* audio blocked — silently skip */ }
+  }
+
+  /* Keydown: Tab/Esc restart only. Backspace at word boundary is blocked (no going back). */
+  $input.addEventListener('keydown', function (e) {
+    if (state.finished) return;
+
+    /* Tab / Escape → restart */
+    if (e.key === 'Tab' || e.key === 'Escape') {
+      e.preventDefault();
+      restart();
+      return;
+    }
+
+    /* Block backspace when at start of a word that has already been submitted */
+    if (e.key === 'Backspace' && $input.value === '' && state.currentWord > 0) {
+      e.preventDefault(); /* swallow — cannot go back */
+      return;
+    }
+  });
+
+  /* Focus management */
+  $box.addEventListener('click', function () { $input.focus(); $box.classList.remove('blurred'); });
+  $input.addEventListener('blur', function () { $box.classList.add('blurred'); });
+  $input.addEventListener('focus', function () { $box.classList.remove('blurred'); });
+
+  /* ════════════════════════════════════════
+     TIMER
+     ════════════════════════════════════════ */
+  function startTimer() {
+    state.started = true;
+    state.timer = setInterval(function () {
+      state.timeLeft--;
+      $liveTimer.textContent = state.timeLeft;
+      updateLiveStats();
+      if (state.timeLeft <= 0) {
+        clearInterval(state.timer);
+        finish();
+      }
+    }, 1000);
+  }
+
+  function updateLiveStats() {
+    var elapsed = state.totalSeconds - state.timeLeft;
+    var minutes = elapsed > 0 ? elapsed / 60 : 0;
+    var wpm = minutes > 0
+      ? Math.round((state.totalCorrect / 5) / minutes)
+      : 0;
+    var total = state.totalCorrect + state.totalWrong;
+    var acc = total > 0 ? Math.round((state.totalCorrect / total) * 100) : null;
+
+    $liveWpm.textContent    = wpm;
+    $liveAcc.textContent    = acc !== null ? acc : '—';
+    $liveErrors.textContent = state.totalWrong;
+    $liveTimer.textContent  = state.timeLeft;
+  }
+
+  /* ════════════════════════════════════════
+     FINISH
+     ════════════════════════════════════════ */
+  function finish() {
+    state.finished = true;
+    $input.blur();
+
+    var elapsed = state.totalSeconds;
+    var minutes = elapsed / 60;
+    var wpm     = Math.round((state.totalCorrect / 5) / minutes);
+    var rawWpm  = Math.round((state.rawChars / 5) / minutes);
+    var total   = state.totalCorrect + state.totalWrong;
+    var acc     = total > 0 ? Math.round((state.totalCorrect / total) * 100) : 100;
+
+    $resWpm.textContent      = wpm;
+    $resAcc.textContent      = acc;
+    $resErrors.textContent   = state.totalWrong;
+    $resRaw.textContent      = rawWpm;
+    $resDuration.textContent = state.totalSeconds;
+    $resChars.textContent    = state.rawChars;
+
+    /* Save to history */
+    var entry = {
+      wpm:      wpm,
+      acc:      acc,
+      errors:   state.totalWrong,
+      mode:     state.totalSeconds + 's',
+      date:     new Date().toLocaleDateString(),
+      ts:       Date.now()
+    };
+    history.unshift(entry);
+    if (history.length > 20) history = history.slice(0, 20);
+    localStorage.setItem('typesprint_history', JSON.stringify(history));
+
+    $typeSec.style.display = 'none';
+    $overlay.classList.add('visible');
+    renderHistory();
+  }
+
+  /* ════════════════════════════════════════
+     RESTART
+     ════════════════════════════════════════ */
+  function restart() {
+    clearInterval(state.timer);
+    var wasStarted = state.started;
+    state.started   = false;
+    state.finished  = false;
+    state.timeLeft  = state.totalSeconds;
+    state.typed     = '';
+    state.typedWords = [];
+    state.currentWord = 0;
+    state.totalCorrect = 0;
+    state.totalWrong   = 0;
+    state.rawChars     = 0;
+
+    $input.value = '';
+    $liveWpm.textContent    = '0';
+    $liveAcc.textContent    = '—';
+    $liveTimer.textContent  = state.totalSeconds;
+    $liveErrors.textContent = '0';
+
+    $overlay.classList.remove('visible');
+    $typeSec.style.display = '';
+
+    generateWords();
+
+    /* hanya set blurred kalau sebelumnya sedang aktif mengetik,
+       supaya ganti bahasa/durasi tidak paksa klik ulang */
+    if (wasStarted) {
+      $box.classList.add('blurred');
+    }
+  }
+
+  function restartNewText() {
+    restart();
+  }
+
+  /* ════════════════════════════════════════
+     HISTORY
+     ════════════════════════════════════════ */
+  function renderHistory() {
+    if (history.length === 0) {
+      $historyEmpty.style.display = '';
+      $historyList.innerHTML = '';
+      return;
+    }
+    $historyEmpty.style.display = 'none';
+
+    /* find best WPM */
+    var bestWpm = Math.max.apply(null, history.map(function (h) { return h.wpm; }));
+
+    var html = '';
+    history.forEach(function (h, i) {
+      var isBest = h.wpm === bestWpm && i === history.findIndex(function(x){ return x.wpm === bestWpm; });
+      html += '<div class="history-row">';
+      html += '<span class="history-index">' + (i + 1) + '</span>';
+      html += '<span class="history-wpm' + (isBest ? ' best' : '') + '">' + h.wpm + ' <span class="history-label">wpm</span></span>';
+      html += '<span class="history-acc">' + h.acc + '%</span>';
+      html += '<span class="history-mode">' + h.mode + '</span>';
+      html += '<span class="history-date">' + h.date + '</span>';
+      html += '</div>';
+    });
+    $historyList.innerHTML = html;
+  }
+
+  /* ════════════════════════════════════════
+     MODE BUTTONS (time)
+     ════════════════════════════════════════ */
+  document.querySelectorAll('.mode-btn[data-seconds]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.mode-btn[data-seconds]').forEach(function (b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      state.totalSeconds = parseInt(btn.dataset.seconds, 10);
+      state.timeLeft     = state.totalSeconds;
+      restart();
+    });
+  });
+
+  /* ════════════════════════════════════════
+     WORD LANGUAGE BUTTONS
+     ════════════════════════════════════════ */
+  function setWordLang(lang) {
+    state.lang = lang;
+
+    /* update active state on word-lang buttons */
+    document.querySelectorAll('.word-lang-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.wordlang === lang);
+    });
+
+    /* also sync the nav EN/ID pill so they stay consistent */
+    var btnEN = document.getElementById('btnEN');
+    var btnID = document.getElementById('btnID');
+    if (btnEN) btnEN.classList.toggle('active', lang === 'en');
+    if (btnID) btnID.classList.toggle('active', lang === 'id');
+
+    document.documentElement.setAttribute('data-lang', lang);
+    document.documentElement.setAttribute('lang', lang);
+    localStorage.setItem('alvakry_lang', lang);
+    restart();
+  }
+
+  document.querySelectorAll('.word-lang-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      setWordLang(btn.dataset.wordlang);
+    });
+  });
+
+  $retryBtn.addEventListener('click', restart);
+  $newTextBtn.addEventListener('click', restartNewText);
+
+  /* ════════════════════════════════════════
+     THEME
+     ════════════════════════════════════════ */
+  function applyTheme(theme) {
+    document.documentElement.setAttribute('data-theme', theme);
+    var isDark = theme === 'dark';
+    document.getElementById('themeIcon').textContent  = isDark ? '☀︎' : '☾';
+    document.getElementById('themeLabel').textContent = isDark ? 'light' : 'dark';
+    localStorage.setItem('alvakry_theme', theme);
+  }
+
+  function toggleTheme() {
+    var cur = document.documentElement.getAttribute('data-theme') || 'light';
+    applyTheme(cur === 'dark' ? 'light' : 'dark');
+  }
+
+  document.getElementById('themeBtn').addEventListener('click', toggleTheme);
+
+  /* ════════════════════════════════════════
+     LANGUAGE
+     ════════════════════════════════════════ */
+  window.setLang = function (lang) {
+    setWordLang(lang); /* delegate ke setWordLang agar semua sync */
+  };
+
+  /* ════════════════════════════════════════
+     CUSTOM CURSOR
+     ════════════════════════════════════════ */
+  (function () {
+    var cursor = document.getElementById('cursor');
+    if (!cursor) return;
+    if (window.matchMedia('(hover: none)').matches) return;
+
+    var mouseX = 0, mouseY = 0;
+    var rafId = null;
+
+    document.addEventListener('mousemove', function (e) {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      if (!rafId) {
+        rafId = requestAnimationFrame(function () {
+          cursor.style.transform = 'translate(' + (mouseX - 5) + 'px, ' + (mouseY - 5) + 'px)';
+          rafId = null;
+        });
+      }
+    });
+
+    document.querySelectorAll('a, button').forEach(function (el) {
+      el.addEventListener('mouseenter', function () { cursor.classList.add('grow'); });
+      el.addEventListener('mouseleave', function () { cursor.classList.remove('grow'); });
+    });
+  })();
+
+  /* ════════════════════════════════════════
+     SECRET TEXT POOL  (kode: "fatpig")
+     Kalimat-kalimat kritik terhadap
+     pemerintahan Indonesia, dipecah jadi
+     kata-kata untuk mode speed typing.
+     ════════════════════════════════════════ */
+  function activateSpecialMode() {
+    state_specialMode = true;
+    document.getElementById('specialBanner').classList.add('visible');
+    /* generateWords sudah handle secret pool via state_specialMode */
+    restart();
+  }
+
+  function deactivateSpecialMode() {
+    state_specialMode = false;
+    document.getElementById('specialBanner').classList.remove('visible');
+    restart();
+  }
+
+  /* ════════════════════════════════════════
+     SECRET CODE MODAL
+     ════════════════════════════════════════ */
+  var $codeBackdrop = document.getElementById('codeModalBackdrop');
+  var $codeInput    = document.getElementById('codeInput');
+  var $codeHint     = document.getElementById('codeHint');
+
+  function openCodeModal() {
+    $codeBackdrop.classList.add('open');
+    $codeInput.value = '';
+    $codeInput.classList.remove('error');
+    $codeHint.classList.remove('err');
+    $codeHint.innerHTML =
+      '<span lang="en">Press <kbd style="border:1px solid var(--border);padding:0.1rem 0.35rem;border-radius:3px;font-family:var(--mono);font-size:0.62rem;">Esc</kbd> to close</span>' +
+      '<span lang="id">Tekan <kbd style="border:1px solid var(--border);padding:0.1rem 0.35rem;border-radius:3px;font-family:var(--mono);font-size:0.62rem;">Esc</kbd> untuk tutup</span>';
+    /* re-apply lang visibility */
+    var lang = document.documentElement.getAttribute('data-lang') || 'en';
+    $codeHint.querySelectorAll('[lang]').forEach(function(el) {
+      el.style.display = el.getAttribute('lang') === lang ? '' : 'none';
+    });
+    setTimeout(function() { $codeInput.focus(); }, 50);
+  }
+
+  function closeCodeModal() {
+    $codeBackdrop.classList.remove('open');
+  }
+
+  $codeBackdrop.addEventListener('click', function(e) {
+    if (e.target === $codeBackdrop) closeCodeModal();
+  });
+
+  $codeInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') { e.preventDefault(); closeCodeModal(); return; }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      var val = $codeInput.value.trim().toLowerCase();
+      if (val === 'fatpig') {
+        closeCodeModal();
+        activateSpecialMode();
+      } else {
+        $codeInput.classList.add('error');
+        $codeHint.classList.add('err');
+        var lang = document.documentElement.getAttribute('data-lang') || 'en';
+        $codeHint.textContent = lang === 'id' ? 'kode salah.' : 'wrong code.';
+        setTimeout(function() { $codeInput.classList.remove('error'); }, 400);
+      }
+    }
+  });
+
+  document.getElementById('exitSpecialBtn').addEventListener('click', deactivateSpecialMode);
+  document.addEventListener('DOMContentLoaded', function () {
+    var savedTheme = localStorage.getItem('alvakry_theme') ||
+      (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+    var savedLang = localStorage.getItem('alvakry_lang') || 'en';
+
+    /* apply theme */
+    applyTheme(savedTheme);
+
+    /* apply language to DOM without calling restart() */
+    state.lang = savedLang;
+    document.documentElement.setAttribute('data-lang', savedLang);
+    document.documentElement.setAttribute('lang', savedLang);
+
+    /* sync nav lang buttons if they exist */
+    var btnEN = document.getElementById('btnEN');
+    var btnID = document.getElementById('btnID');
+    if (btnEN) btnEN.classList.toggle('active', savedLang === 'en');
+    if (btnID) btnID.classList.toggle('active', savedLang === 'id');
+
+    /* sync word-lang buttons in mode-row */
+    document.querySelectorAll('.word-lang-btn').forEach(function (b) {
+      b.classList.toggle('active', b.dataset.wordlang === savedLang);
+    });
+
+    /* generate and render words immediately */
+    generateWords();
+
+    /* start in blurred state — teks kelihatan, perlu klik untuk mengetik */
+    $box.classList.add('blurred');
+
+    renderHistory();
+
+    /* Ctrl+P → buka secret code modal */
+    document.addEventListener('keydown', function(e) {
+      if (e.altKey && e.key === 'p') {
+        e.preventDefault();
+        openCodeModal();
+      }
+    });
+  });
+
+})();
+</script>
+</body>
+</html>
